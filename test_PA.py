@@ -3,7 +3,7 @@ import os
 
 mydir = os.getcwd() + "/LRG_public_xml_files/"
 
-tree = ET.parse(mydir + "LRG_1.xml")
+tree = ET.parse("../LRG_Data/LRG_1.xml")
 
 root = tree.getroot()	
 
