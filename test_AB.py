@@ -7,7 +7,7 @@ from lxml import etree
 
 #help(etree.XMLParser)
 
-context = etree.iterparse('LRG_1.xml')
+context = etree.iterparse('../LRG_Data/LRG_1.xml')
 #print help(context)
 for action, elem in context:
     if elem.tag == 'exon':
