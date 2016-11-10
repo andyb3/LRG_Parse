@@ -1,0 +1,21 @@
+import element tree
+
+user types in: lrg_parser.py LRG_1
+
+use sys.argv to grab the LRG code
+
+   check to see if the relevant file exists
+   if it exists, proceed
+   if not, warn the user that it's not a valid code
+
+create the root object using element tree
+
+assign the genomic DNA sequence to a variable
+
+start going through the exons using the root.findall thing
+
+   extract exon number, coordinate system, start, end
+   create a temporary list
+   append to main list
+
+add the sequence to
