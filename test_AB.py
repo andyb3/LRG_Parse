@@ -3,23 +3,24 @@ Created on 9 Nov 2016
 
 @author: andy
 '''
-from lxml import etree
+import xml.etree.ElementTree as etree
 
-#help(etree.XMLParser)
+root = etree.parse('../LRG_Data/LRG_1.xml')
 
-context = etree.iterparse('../LRG_Data/LRG_1.xml')
-#print help(context)
-for action, elem in context:
-    if elem.tag == 'exon':
-        for child in elem:
-            print elem.tag
-            print elem.attrib
-            print child.tag
-            print child.attrib
-        #print elem.tag
-        #print elem.attrib
-    #print elem.text
-    #print elem.attrib
+for exon in root.findall('./fixed_annotation/transcript/exon'):
+    print exon.attrib['label']
+    for coordinates in exon.findall('coordinates'):
+        print coordinates.attrib 
 
-
-    
+#===============================================================================
+# for child in root.iter('cdna'):
+#     for sequence in child.iter('sequence'):
+#         print sequence.text
+#       
+#   
+# for child in root.iter('fixed_annotation'):
+#     for exon in child.iter('exon'):
+#         print exon.attrib['label']
+#         for coordinate in exon.iter('coordinates'):
+#             print coordinate.attrib 
+#===============================================================================
