@@ -104,12 +104,12 @@ def getExons(tree, dnaSeq, geneData):
             exonList.append(tmp)
     return exonList
 
-def writeCSV(headers, exonList):
+def writeCSV(headers, exonList, LRG):
 
     '''Writes the output to a CSV file'''
 
     exonList.insert(0, headers)
-    outputFile = os.getcwd() + "/output.csv"
+    outputFile = os.getcwd() + "/" + LRG + "_output.csv"
 
     # Write the output file
     with open(outputFile, 'wb') as f:
@@ -136,7 +136,7 @@ if tree:
     geneData = getGeneLevData(tree)
     exonList = getExons(tree, dnaSeq, geneData)
     headers = ['LRG_Number', 'Build', 'HGNCID', 'Gene', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
-    writeCSV(headers, exonList)
+    writeCSV(headers, exonList, LRG)
     #for row in exonList:
     #    print(row)
 
