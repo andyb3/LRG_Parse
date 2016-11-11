@@ -1,21 +1,20 @@
 import xml.etree.ElementTree as etree
+import urllib2
 import os
 import csv
 import sys
 
 
 def readLRG(lrg):
+    lrgURL = 'http://ftp.ebi.ac.uk/pub/databases/lrgex/' + lrg + '.xml'
+    urllib2.urlopen('http://ftp.ebi.ac.uk/pub/databases/lrgex/LRG_1.xml')
     filepath = '../LRG_Data/' + lrg + '.xml'
-    if os.path.isfile(filepath) == False:
-         print("Please specify a valid LRG number")
-         return
+    tree = etree.parse(urllib2.urlopen(lrgURL))
+    if tree.getroot().tag == 'lrg' and tree.getroot().attrib['schema_version'] == "1.9":
+        return tree
     else:
-        tree = etree.parse(filepath)
-        if tree.getroot().tag == 'lrg' and tree.getroot().attrib['schema_version'] == "1.9":
-            return tree
-        else:
-            print("File does not conform to lrg version 1.9 specification.")
-            return
+        print("File does not conform to lrg version 1.9 specification.")
+        return
 
 def getBuildChrom(tree):
     for annotation_set in tree.findall('updatable_annotation/'):
@@ -116,29 +115,29 @@ if tree:
 #===============================================================================
 # '''
 # Created on 9 Nov 2016
-# 
+#
 # @author: andy
 # '''
 # import xml.etree.ElementTree as etree
 # import urllib2
-# 
+#
 # #root = etree.parse('../LRG_Data/LRG_1.xml')
 # root = etree.parse(urllib2.urlopen('http://ftp.ebi.ac.uk/pub/databases/lrgex/LRG_1.xml'))
 # for exon in root.findall('./fixed_annotation/transcript/exon'):
 #     print exon.attrib['label']
 #     for coordinates in exon.findall('coordinates'):
-#         print coordinates.attrib 
-# 
+#         print coordinates.attrib
+#
 # #===============================================================================
 # # for child in root.iter('cdna'):
 # #     for sequence in child.iter('sequence'):
 # #         print sequence.text
-# #       
-# #   
+# #
+# #
 # # for child in root.iter('fixed_annotation'):
 # #     for exon in child.iter('exon'):
 # #         print exon.attrib['label']
 # #         for coordinate in exon.iter('coordinates'):
-# #             print coordinate.attrib 
+# #             print coordinate.attrib
 # #===============================================================================
 #===============================================================================
