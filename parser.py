@@ -136,8 +136,8 @@ if tree:
     geneData = getGeneLevData(tree)
     exonList = getExons(tree, dnaSeq, geneData)
     headers = ['LRG_Number', 'Build', 'HGNCID', 'Gene', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
-    # writeCSV(headers, exonList)
-    for row in exonList:
-        print(row)
+    writeCSV(headers, exonList)
+    #for row in exonList:
+    #    print(row)
 
-print("Done")
+#print("Done")
