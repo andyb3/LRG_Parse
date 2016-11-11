@@ -3,11 +3,21 @@ import os
 import csv
 import sys
 
-usergene = sys.argv[1]
+mydict = {'foo': 1, 'bar': 2}
 
-print('Usergene is %s' % usergene)
+myvar = 'foo'
 
-LRG_dir = '../LRG_Data/'
+if myvar in mydict:
+	print("YAS")
+
+
+
+
+# usergene = sys.argv[1]
+
+# print('Usergene is %s' % usergene)
+
+# LRG_dir = '../LRG_Data/'
 
 # code to take user's gene and find the corresponding LRG
 # def findLRG(usergene, LRG_dir):

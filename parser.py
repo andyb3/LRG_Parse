@@ -1,11 +1,16 @@
+import urllib2
 import xml.etree.ElementTree as etree
 import os
 import csv
 import sys
 import pickle
 
+
 def checkGeneDict(usergene):
     
+    '''Opens a pickle dictionary containing all of the current (Nov 2016) LRG codes and their corresponding genes
+    and returns the correct LRG code for the user specified gene'''
+
     with open('genedict.pickle', 'rb') as handle:
         genedict = pickle.load(handle)
 
@@ -13,19 +18,31 @@ def checkGeneDict(usergene):
         if usergene == genename:
             return LRG
 
+def checkValidLRG(userLRG):
+
+    '''Opens a pickle dictionary containing all of the current (Nov 2016) LRG codes and their corresponding genes
+    and checks that the specified LRG code exists in the dict, then returns the specified LRG code'''
+
+    with open('genedict.pickle', 'rb') as handle:
+        genedict = pickle.load(handle)
+
+    if userLRG in genedict:
+        return userLRG
+    else:
+        print("Invalid LRG code")
+        exit()
+
 def readLRG(lrg):
     
-    filepath = '../LRG_Data/' + lrg + '.xml'
-    if os.path.isfile(filepath) == False:
-         print("Please specify a valid LRG number")
-         return
+    '''Takes the LRG code and fetches the relevant XML file from the EBI ftp site'''
+
+    lrgURL = 'http://ftp.ebi.ac.uk/pub/databases/lrgex/' + lrg + '.xml'
+    tree = etree.parse(urllib2.urlopen(lrgURL))
+    if tree.getroot().tag == 'lrg' and tree.getroot().attrib['schema_version'] == "1.9":
+        return tree
     else:
-        tree = etree.parse(filepath)
-        if tree.getroot().tag == 'lrg' and tree.getroot().attrib['schema_version'] == "1.9":
-            return tree
-        else:
-            print("File does not conform to lrg version 1.9 specification.")
-            return
+        print("File does not conform to lrg version 1.9 specification.")
+        return
 
 def getGeneLevData(tree):
    
@@ -67,6 +84,8 @@ def getExons(tree, dnaSeq, geneData):
 
 def writeCSV(headers, exonList):
     
+    '''Writes the output to a CSV file'''
+
     exonList.insert(0, headers)
     outputFile = os.getcwd() + "/output.csv"
     
@@ -85,55 +104,18 @@ assert (sys.argv[1] in ['-g', '-l']), "Wrong flag"
 
 # Depending on whether the user has used the '-g' or '-l' flag...
 if sys.argv[1] == '-g':
-    print(checkGeneDict(sys.argv[2]))
+    LRG = checkGeneDict(sys.argv[2])
 elif sys.argv[1] == '-l':
-    print("You used the -l flag!")
+    LRG = checkValidLRG(sys.argv[2])
 
-# tree = readLRG(sys.argv[1])
-# if tree:
-#     dnaSeq = tree.find('./fixed_annotation/sequence').text
-#     geneData = getGeneLevData(tree)
-#     exonList = getExons(tree, dnaSeq, geneData)
-#     headers = ['LRG_Number', 'Build', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
-#     # writeCSV(headers, exonList)
-#     for row in exonList:
-#         print(row)
+tree = readLRG(LRG)
+if tree:
+    dnaSeq = tree.find('./fixed_annotation/sequence').text
+    geneData = getGeneLevData(tree)
+    exonList = getExons(tree, dnaSeq, geneData)
+    headers = ['LRG_Number', 'Build', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
+    # writeCSV(headers, exonList)
+    for row in exonList:
+        print(row)
 
-
-# for i in range(250):
-#     lrg = 'LRG_' + str(i)
-#     print(lrg)
-#     tree = readLRG(lrg)
-#     if tree:
-#         dnaSeq = tree.find('./fixed_annotation/sequence').text
-#         build, chrom, conv_offset = getBuildChrom(tree)
-#         exonList = getExons(tree, dnaSeq, build, chrom, conv_offset)
-#         headers = ['LRG_Number', 'Build', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
-#         # writeCSV(headers, exonList)
-#         for row in exonList:
-#             print(row)
-
-# dnaSeq = tree.find('./fixed_annotation/sequence').text
-
-# mylist = []
-
-# build, chrom, conv_offset = getBuildChrom()
-
-# for row in mylist:
-# 	print(row)
-
-# Create the headers
-# headers = ['Transcript_ID', 'Exon_no', 'Coordinate_system', 'Start', 'End', 'Sequence']
-
-# Add headers to the output
-# mylist.insert(0, headers)
-
-# Define the output file
-# myoutput = os.getcwd() + "/output.csv"
-
-# Write the output file
-# with open(myoutput, 'wb') as f:
-# 	writer = csv.writer(f)
-# 	writer.writerows(mylist)
-
-# print("Done")
+print("Done")
