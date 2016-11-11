@@ -17,19 +17,21 @@ def readLRG(lrg):
             print("File does not conform to lrg version 1.9 specification.")
             return
 
-def getBuildChrom(tree):
+def getGeneLevData(tree):
+    '''Retrieves data that applies to whole LRG file (as opposed to individual exons) and returns in a dictionary'''
+    geneData = {} # Initialise empty dictionary  
     for annotation_set in tree.findall('updatable_annotation/'):
         if annotation_set.attrib['type'] == 'lrg':
             for mapping in annotation_set.findall('mapping'):
                 if mapping.attrib['type'] == 'main_assembly':
-                    build = mapping.attrib['coord_system']
-                    chrom = mapping.attrib['other_name']
-                    other_start = int(mapping.find('mapping_span').attrib['other_start'])
-                    other_end = int(mapping.find('mapping_span').attrib['other_end'])
-                    strand = mapping.find('mapping_span').attrib['strand']
-                    return build, chrom, other_start, other_end, strand
+                    geneData['build'] = mapping.attrib['coord_system']
+                    geneData['chrom'] = mapping.attrib['other_name']
+                    geneData['other_start'] = int(mapping.find('mapping_span').attrib['other_start'])
+                    geneData['other_end'] = int(mapping.find('mapping_span').attrib['other_end'])
+                    geneData['strand'] = mapping.find('mapping_span').attrib['strand']
+                    return geneData
 
-def getExons(tree, dnaSeq, build, chrom, other_start, other_end, strand):
+def getExons(tree, dnaSeq, geneData):
     exonList = []
     for transcript in tree.findall('./fixed_annotation/transcript'):
         tx = transcript.attrib['name']
@@ -39,14 +41,14 @@ def getExons(tree, dnaSeq, build, chrom, other_start, other_end, strand):
             coord_sys = coordinates.attrib['coord_system']
             start = coordinates.attrib['start']
             end = coordinates.attrib['end']
-            if strand == "1":
-                gDNA_start = (int(start) + int(other_start)) - 1
-                gDNA_end = (int(end) + int(other_start)) - 1
-            elif strand == "-1":
-                gDNA_start = (int(other_end) - int(start)) + 1
-                gDNA_end = (int(other_end) - int(end)) + 1
+            if geneData['strand'] == "1":
+                gDNA_start = (int(start) + int(geneData['other_start'])) - 1
+                gDNA_end = (int(end) + int(geneData['other_start'])) - 1
+            elif geneData['strand'] == "-1":
+                gDNA_start = (int(geneData['other_end']) - int(start)) + 1
+                gDNA_end = (int(geneData['other_end']) - int(end)) + 1
             seq = dnaSeq[int(start)-1:int(end)]
-            tmp = [coord_sys, build, tx, exonnumber, chrom, gDNA_start, gDNA_end, seq]
+            tmp = [coord_sys, geneData['build'], tx, exonnumber, geneData['chrom'], gDNA_start, gDNA_end, seq]
             exonList.append(tmp)
     return exonList
 
@@ -75,8 +77,8 @@ def writeCSV(headers, exonList):
 tree = readLRG(sys.argv[1])
 if tree:
     dnaSeq = tree.find('./fixed_annotation/sequence').text
-    build, chrom, other_start, other_end, strand = getBuildChrom(tree)
-    exonList = getExons(tree, dnaSeq, build, chrom, other_start, other_end, strand)
+    geneData = getGeneLevData(tree)
+    exonList = getExons(tree, dnaSeq, geneData)
     headers = ['LRG_Number', 'Build', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
     # writeCSV(headers, exonList)
     for row in exonList:
