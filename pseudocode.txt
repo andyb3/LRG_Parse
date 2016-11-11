@@ -19,3 +19,9 @@ start going through the exons using the root.findall thing
    append to main list
 
 add the sequence to
+
+
+function to:
+- get the gDNA sequence
+- check whether it's in 37 or 38
+- make it aware that the gDNA sequence is in 37/38
