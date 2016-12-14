@@ -17,6 +17,9 @@ def checkGeneDict(usergene):
     for LRG, genename in genedict.iteritems():
         if usergene == genename:
             return LRG
+    # If no LRG file is found matching the gene symbol provided, print message for user
+    print("No LRG file found that matches the gene symbol specified.")
+    return # Return a Null value
 
 def checkValidLRG(userLRG):
 
@@ -30,7 +33,7 @@ def checkValidLRG(userLRG):
         return userLRG
     else:
         print("Invalid LRG code")
-        exit()
+        return # Return a Null value
 
 def readLRG(lrg):
 
@@ -39,10 +42,13 @@ def readLRG(lrg):
     lrgURL = 'http://ftp.ebi.ac.uk/pub/databases/lrgex/' + lrg + '.xml'
     try:
         lrgXML = urllib2.urlopen(lrgURL) #Request LRG file
-        assert (lrgXML.getcode() == 200), "Unable to retrieve LRG file from web" # Check HTTP response = 200 (indicates request was successful)
+        if lrgXML.getcode() != 200:  # Check HTTP response = 200 (indicates request was successful)
+            print("Unable to retrieve LRG file from web.")
+            return # Return a Null value
     #Catch any HTTP or URL errors and exit program with error message if site can't be reached.
     except (urllib2.HTTPError, urllib2.URLError):
-        raise ValueError("Unable to retrieve LRG file from web")
+        print("Unable to retrieve LRG file from web.")
+        return # Return a Null value
     else:
         #Check that the file contains the lrg tag and conforms to version 1.9 standards.
         #An error message is displayed and program exits if these conditions are not met.
@@ -99,28 +105,33 @@ def getGenomicSeq(tree):
     #Loop through differences between LRG and main assembly
     #On each iteration, modify mainAssemSeq and convertPosDict to account for each difference.
     for diff in mainAssemData.findall("diff"):
+        lrgDiffStart = int(diff.attrib['lrg_start'])
+        lrgDiffEnd = int(diff.attrib['lrg_end'])
         #Convert LRG start and end positions of the variant to the current main assembly start and end positions
-        startPos = convertPosDict[int(diff.attrib['lrg_start'])]
-        endPos = convertPosDict[int(diff.attrib['lrg_end'])]
+        startPos = convertPosDict[lrgDiffStart]
+        endPos = convertPosDict[lrgDiffEnd]
         #Get the LRG and main assembly sequence at the location of variant 
         lrgSeq = diff.attrib['lrg_sequence']
         otherSeq = diff.attrib['other_sequence']
+        
         #If it's a mismatch...
         if diff.attrib['type'] == 'mismatch':
             #Check the stated LRG sequence matches the current sequence at that position
             assert (mainAssemSeq[startPos-1:endPos] == lrgSeq), "Error when converting to genomic sequence. LRG sequence not as expected."
             #Add the change into the main assembly sequence
             mainAssemSeq = mainAssemSeq[:startPos-1] + otherSeq + mainAssemSeq[endPos:]
+        
         #If it's an insertion into the main assembly...
         elif diff.attrib['type'] == 'other_ins':
-            #Check there is no LRG sequence
+            #Check that the LRG sequence is stated as '-'
             assert (lrgSeq == "-"), "Error when converting to genomic sequence. LRG sequence not as expected."
             #Add the insertion into the main assembly sequence
             mainAssemSeq = mainAssemSeq[:startPos] + otherSeq + mainAssemSeq[endPos-1:]
             #Update the lookup dictionary so all positions after the insertion are shifted by the insertion length 
             insLength = len(otherSeq)
-            for i in range(endPos, lrgEnd+1):
+            for i in range(lrgDiffEnd, lrgEnd+1):
                 convertPosDict[i] += insLength 
+       
         #If it's an insertion into the LRG sequence (effectively a deletion in main assembly)...
         elif diff.attrib['type'] == 'lrg_ins':
             #Check the stated LRG sequence matches the current sequence at that position            
@@ -129,17 +140,18 @@ def getGenomicSeq(tree):
             assert (otherSeq == "-"), "Error when converting to genomic sequence. LRG sequence not as expected."
             #Remove the deleted sequence from the main assembly sequence    
             mainAssemSeq = mainAssemSeq[:startPos-1] + mainAssemSeq[endPos:]
-            #For LRG positions that lie within deleted region, 
-            #update the lookup dictionary so they map to the first base following the deletion in main assembly
+            #For LRG positions that lie within deleted region, update the lookup dictionary so they map to the first base following the deletion in main assembly
             delLength = len(lrgSeq)
             posConvDel = endPos - (delLength-1)
-            for i in range(startPos, endPos+1):
+            for i in range(lrgDiffStart, lrgDiffEnd+1):
                 convertPosDict[i] = posConvDel
             #Update the lookup dictionary so all positions after the deletion are shifted by the deletion length 
-            for i in range(endPos+1, lrgEnd+1):
-                convertPosDict[i] -= delLength 
+            for i in range(lrgDiffEnd+1, lrgEnd+1):
+                convertPosDict[i] -= delLength
+                
         else:
             raise ValueError("An unexpected diff type was encountered when converting to genomic sequence. Couldn't process LRG file.")
+    
     return mainAssemSeq, convertPosDict
 
 
@@ -159,10 +171,10 @@ def getExons(tree, geneData, mainAssemSeq, convertPosDict):
             coordinates = exon.find('coordinates')
             coord_sys = coordinates.attrib['coord_system'] # LRG number
             start = coordinates.attrib['start'] # LRG start position
-            start = convertPosDict[int(start)]# Start position in main assembly sequence
+            start = convertPosDict[int(start)]# Start position in constructed main assembly sequence
             end = coordinates.attrib['end'] # LRG End position
-            end = convertPosDict[int(end)]# End position in main assembly sequence
-            # Convert LRG coordinates to genomic coordinates
+            end = convertPosDict[int(end)]# End position in constructed main assembly sequence
+            # Convert coordinates to genomic coordinates
             # If the gene is located on the forward strand...
             if geneData['strand'] == "1":
                 gDNA_start = (int(start) + int(geneData['other_start'])) - 1
@@ -173,7 +185,7 @@ def getExons(tree, geneData, mainAssemSeq, convertPosDict):
                 gDNA_end = (int(geneData['other_end']) - int(end)) + 1
             else:
                 raise ValueError("Strand orientation not specified. Unable to calculate genomic coordinates.")
-            # Use the LRG coordinates to take a slice the DNA and retrieve exon sequence
+            # Use the coordinates to slice the DNA and retrieve exon sequence
             seq = mainAssemSeq[int(start)-1:int(end)]
             # Create list containing all details to be included in CSV row for that exon
             tmp = [coord_sys, geneData['build'], geneData['hgncID'], geneData['geneSymbol'], tx, exonnumber, geneData['chrom'], gDNA_start, gDNA_end, seq]
@@ -208,14 +220,15 @@ if __name__ == '__main__':
     elif sys.argv[1] == '-l':
         LRG = checkValidLRG(sys.argv[2]) #Checks user specified LRG is valid
     
-    tree = readLRG(LRG)
-    
-    mainAssemSeq, convertPosDict = getGenomicSeq(tree)
-    geneData = getGeneLevData(tree)
-    exonList = getExons(tree, geneData, mainAssemSeq, convertPosDict)
-    headers = ['LRG_Number', 'Build', 'HGNCID', 'Gene', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
-    writeCSV(headers, exonList, LRG)
-    #for row in exonList:
-    #    print(row)
-    
-    #print("Done")
+    if LRG: # If an invalid LRG code or Gene symbol were provided, LRG will be Null
+        tree = readLRG(LRG)
+        if tree: # If LRG file hasn't been retrieved and read correctly, tree will be Null
+            mainAssemSeq, convertPosDict = getGenomicSeq(tree)
+            geneData = getGeneLevData(tree)
+            exonList = getExons(tree, geneData, mainAssemSeq, convertPosDict)
+            headers = ['LRG_Number', 'Build', 'HGNCID', 'Gene', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
+            writeCSV(headers, exonList, LRG)
+            #for row in exonList:
+            #    print(row)
+            
+            #print("Done")
