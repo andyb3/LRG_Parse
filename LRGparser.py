@@ -212,6 +212,7 @@ def writeCSV(headers, exonList, LRG):
     with open(outputFile, 'wb') as f:
         writer = csv.writer(f)
         writer.writerows(exonList)
+    print "File output to: " + outputFile
 
 ###############################################################################
 
