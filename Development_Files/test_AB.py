@@ -11,7 +11,7 @@ def checkGeneDict(usergene):
     '''Opens a pickle dictionary containing all of the current (Nov 2016) LRG codes and their corresponding genes
     and returns the correct LRG code for the user specified gene'''
 
-    with open('genedict.pickle', 'rb') as handle:
+    with open('../genedict.pickle', 'rb') as handle:
         genedict = pickle.load(handle)
 
     for LRG, genename in genedict.iteritems():
@@ -26,7 +26,7 @@ def checkValidLRG(userLRG):
     '''Opens a pickle dictionary containing all of the current (Nov 2016) LRG codes and their corresponding genes
     and checks that the specified LRG code exists in the dict, then returns the specified LRG code'''
 
-    with open('genedict.pickle', 'rb') as handle:
+    with open('../genedict.pickle', 'rb') as handle:
         genedict = pickle.load(handle)
 
     if userLRG in genedict:
@@ -42,6 +42,7 @@ def readLRG(lrg):
     lrgURL = 'http://ftp.ebi.ac.uk/pub/databases/lrgex/' + lrg + '.xml'
     try:
         lrgXML = urllib2.urlopen(lrgURL) #Request LRG file
+        print lrgXML.getcode()
         if lrgXML.getcode() != 200:  # Check HTTP response = 200 (indicates request was successful)
             print("Unable to retrieve LRG file from web.")
             return # Return a Null value
@@ -219,16 +220,17 @@ if __name__ == '__main__':
         LRG = checkGeneDict(sys.argv[2]) #Returns LRG number for user specified gene symbol.
     elif sys.argv[1] == '-l':
         LRG = checkValidLRG(sys.argv[2]) #Checks user specified LRG is valid
-    
+    print LRG
     if LRG: # If an invalid LRG code or Gene symbol were provided, LRG will be Null
         tree = readLRG(LRG)
         if tree: # If LRG file hasn't been retrieved and read correctly, tree will be Null
             mainAssemSeq, convertPosDict = getGenomicSeq(tree)
-
-            handle = open('./Test_Files/convertPosDict.pickle', 'wb')
-            pickle.dump(convertPosDict, handle)
             geneData = getGeneLevData(tree)
             exonList = getExons(tree, geneData, mainAssemSeq, convertPosDict)
+            
+            with open(geneData['geneSymbol'] + "_geneData.pickle", 'wb') as handle:
+                pickle.dump(geneData)
+            
             headers = ['LRG_Number', 'Build', 'HGNCID', 'Gene', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
             writeCSV(headers, exonList, LRG)
             #for row in exonList:
