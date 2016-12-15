@@ -228,8 +228,8 @@ if __name__ == '__main__':
             geneData = getGeneLevData(tree)
             exonList = getExons(tree, geneData, mainAssemSeq, convertPosDict)
             
-            with open(geneData['geneSymbol'] + "_geneData.pickle", 'wb') as handle:
-                pickle.dump(geneData)
+            with open(geneData['geneSymbol'] + "_exonList.pickle", 'wb') as handle:
+                pickle.dump(exonList, handle)
             
             headers = ['LRG_Number', 'Build', 'HGNCID', 'Gene', 'Transcript_ID', 'Exon_no', 'Chrom', 'Start', 'End', 'Sequence']
             writeCSV(headers, exonList, LRG)
