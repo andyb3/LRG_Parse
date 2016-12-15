@@ -1,3 +1,11 @@
+'''
+Authors:        Paul Acklam and Andy Bond
+Created:        November 2016
+Description:    Parses LRG XML file and outputs CSV file containing information about each exon in each transcript
+Usage:          See README for details.
+'''
+
+
 import urllib2
 import xml.etree.ElementTree as etree
 import os
@@ -84,11 +92,11 @@ def getGeneLevData(tree):
     return geneData
 
 def getGenomicSeq(tree):
-    
+
     '''
     Builds genomic (main assembly) sequence from LRG sequence
     Accounts for all differences (mismatch, insertions and deletions) between LRG and main assembly sequence.
-    Returns genomic sequence and lookup dictionary to convert LRG sequence positions to main assembly sequence positions. 
+    Returns main assembly sequence and lookup dictionary to convert LRG sequence positions to main assembly sequence positions. 
     '''
     
     #Get complete LRG sequence and create copy that will be converted to main assembly sequence 
@@ -111,37 +119,37 @@ def getGenomicSeq(tree):
         startPos = convertPosDict[lrgDiffStart]
         endPos = convertPosDict[lrgDiffEnd]
         #Get the LRG and main assembly sequence at the location of variant 
-        lrgSeq = diff.attrib['lrg_sequence']
-        otherSeq = diff.attrib['other_sequence']
+        lrgDiffSeq = diff.attrib['lrg_sequence']
+        otherDiffSeq = diff.attrib['other_sequence']
         
         #If it's a mismatch...
         if diff.attrib['type'] == 'mismatch':
             #Check the stated LRG sequence matches the current sequence at that position
-            assert (mainAssemSeq[startPos-1:endPos] == lrgSeq), "Error when converting to genomic sequence. LRG sequence not as expected."
+            assert (mainAssemSeq[startPos-1:endPos] == lrgDiffSeq), "Error when converting to genomic sequence. LRG sequence not as expected."
             #Add the change into the main assembly sequence
-            mainAssemSeq = mainAssemSeq[:startPos-1] + otherSeq + mainAssemSeq[endPos:]
+            mainAssemSeq = mainAssemSeq[:startPos-1] + otherDiffSeq + mainAssemSeq[endPos:]
         
         #If it's an insertion into the main assembly...
         elif diff.attrib['type'] == 'other_ins':
             #Check that the LRG sequence is stated as '-'
-            assert (lrgSeq == "-"), "Error when converting to genomic sequence. LRG sequence not as expected."
+            assert (lrgDiffSeq == "-"), "Error when converting to genomic sequence. LRG sequence not as expected."
             #Add the insertion into the main assembly sequence
-            mainAssemSeq = mainAssemSeq[:startPos] + otherSeq + mainAssemSeq[endPos-1:]
+            mainAssemSeq = mainAssemSeq[:startPos] + otherDiffSeq + mainAssemSeq[endPos-1:]
             #Update the lookup dictionary so all positions after the insertion are shifted by the insertion length 
-            insLength = len(otherSeq)
+            insLength = len(otherDiffSeq)
             for i in range(lrgDiffEnd, lrgEnd+1):
                 convertPosDict[i] += insLength 
        
         #If it's an insertion into the LRG sequence (effectively a deletion in main assembly)...
         elif diff.attrib['type'] == 'lrg_ins':
             #Check the stated LRG sequence matches the current sequence at that position            
-            assert (mainAssemSeq[startPos-1:endPos] == lrgSeq), "Error when converting to genomic sequence. LRG sequence not as expected."
+            assert (mainAssemSeq[startPos-1:endPos] == lrgDiffSeq), "Error when converting to genomic sequence. LRG sequence not as expected."
             #Check there is no main assembly sequence 
-            assert (otherSeq == "-"), "Error when converting to genomic sequence. LRG sequence not as expected."
+            assert (otherDiffSeq == "-"), "Error when converting to genomic sequence. LRG sequence not as expected."
             #Remove the deleted sequence from the main assembly sequence    
             mainAssemSeq = mainAssemSeq[:startPos-1] + mainAssemSeq[endPos:]
             #For LRG positions that lie within deleted region, update the lookup dictionary so they map to the first base following the deletion in main assembly
-            delLength = len(lrgSeq)
+            delLength = len(lrgDiffSeq)
             posConvDel = endPos - (delLength-1)
             for i in range(lrgDiffStart, lrgDiffEnd+1):
                 convertPosDict[i] = posConvDel
