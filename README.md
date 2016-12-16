@@ -58,9 +58,13 @@ The parser outputs the genomic sequence and coordinates, using the genome build 
 The file is output into the working directory. The file will have the following name format:
 LRG_[number]_output.csv
 
+An example output file (for the NF1 gene) is included in this repository (LRG_214_output_example.csv)
+
 **Testing**
 
 A test suite is available for the program. The easiest way to run the test suite is to download the complete GitHub repository (https://github.com/andyb3/LRG_Parse) and run the tests.py script. **NOTE:** On Windows the repository should be downloaded as a .zip file and extracted, rather than using git clone. (Depending on the way git is configured, the pickle files can become corrupted when using git clone on Windows.)
+
+The program has been successfully tested on Ubuntu 16.10 and Windows 10 (64 bit).
 
 The program output has been validated against the genomic coordinates and sequence found in the Ensembl genome browser for the following genes:
 * BRCA1
