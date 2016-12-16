@@ -14,19 +14,17 @@ Paul Acklam and Andrew Bond, November 2016
 **Requirements:**
 
 * `LRGparser.py`
-* `genedict.pickle`
-* Internet connection
+* Python 2.7
+* Internet connection with access to GitHub and LRG XML files
 
-The files above must be saved in the same directory.
-
-They can be downloaded from:
+LRGparser.py should be downloaded from the following GitHub repository:
 
 https://github.com/andyb3/LRG_Parse
 
 
 **Python version**
 
-LRGparser was written and tested in Python 2.7. It is not currently compatible with Python 3.X.
+LRGparser was written and tested in Python 2.7 . It is not currently compatible with Python 3.X.
 
 All modules used are standard Python 2.7 modules, no third party installations should be required.
 
@@ -62,8 +60,7 @@ LRG_[number]_output.csv
 
 **Testing**
 
-A test suite is available for the program. To run a unit test, save the tests.py script and Test_Files folder (+ contents) alongside the LRGparser.py file, and run the tests.py script. All files can be downloaded from the github repository: https://github.com/andyb3/LRG_Parse
-
+A test suite is available for the program. The easiest way to run the test suite is to download the complete GitHub repository (https://github.com/andyb3/LRG_Parse) and run the tests.py script. **NOTE:** On Windows the repository should be downloaded as a .zip file and extracted, rather than using git clone. (Depending on the way git is configured, the pickle files can become corrupted when using git clone on Windows.)
 
 The program output has been validated against the genomic coordinates and sequence found in the Ensembl genome browser for the following genes:
 * BRCA1
