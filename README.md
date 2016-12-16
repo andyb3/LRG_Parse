@@ -4,7 +4,7 @@
 
 For LRG file details, see Locus Reference Genomic website: http://www.lrg-sequence.org/
 
-NOTE: This parser only works for LRG files with the public status.
+**NOTE:** This parser only works for LRG files that had public status as of **November 2016**.
 
 **Authors**
 

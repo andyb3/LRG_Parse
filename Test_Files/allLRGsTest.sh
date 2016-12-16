@@ -1,1 +1,1 @@
-while read p; do python parser.py -l $p; done < allLRGs.txt
+while read p; do python LRGparser.py -l $p; done < allLRGs.txt

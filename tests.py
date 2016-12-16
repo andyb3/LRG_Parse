@@ -15,19 +15,19 @@ import pickle
 class TestStringMethods(unittest.TestCase):
 
     def test_checkGeneDict(self):
-        '''Tests that checkGeneDict() function produces expected output''' 
-        # With valid gene symbol...       
+        '''Tests that checkGeneDict() function produces expected output'''
+        # With valid gene symbol...
         self.assertEqual(LRGparser.checkGeneDict('BRCA1'), "LRG_292", "checkGeneDict() did not return correct LRG for BRCA1")
         # With invalid gene symbol...
         self.assertEqual(LRGparser.checkGeneDict('xxxxxxx'), None, "checkGeneDict() did not return Null value when invalid gene symbol provided")
-        
+
     def test_checkValidLRG(self):
-        '''Tests that checkValidLRG() function produces expected output''' 
+        '''Tests that checkValidLRG() function produces expected output'''
         # With valid LRG...
         self.assertEqual(LRGparser.checkValidLRG('LRG_1'), 'LRG_1', "valid LRG did not pass checkValidLRG() validation")
         # With invalid LRG...
         self.assertEqual(LRGparser.checkValidLRG('xxxxxxx'), None, "invalid LRG was not caught by checkValidLRG() validation")
-    
+
     def test_readLRG(self):
         '''Tests that readLRG() function produces expected output'''
         # With valid URL for LRG FTP server...
@@ -45,11 +45,11 @@ class TestStringMethods(unittest.TestCase):
         # Check first and last pieces of data extracted by function are correct
         self.assertEqual(geneData['hgncID'], '2197')
         self.assertEqual(geneData['strand'], '-1')
-        
+
     def test_getGenomicSeq(self):
         '''Tests that getGenomicSeq() function produces expected output'''
         # BRCA1 file contains multiple mismatches, insertions and deletions between LRG and genomic main assembly sequence
-        # Test that getGenomicSeq can convert from LRG to genomic main assembly correctly 
+        # Test that getGenomicSeq can convert from LRG to genomic main assembly correctly
         tree = etree.parse('./Test_Files/LRG_292.xml')
         mainAssemSeq, convertPosDict = LRGparser.getGenomicSeq(tree)
         handle = open('./Test_Files/BRCA_38_Seq.txt', 'r')
@@ -69,10 +69,11 @@ class TestStringMethods(unittest.TestCase):
         # Test with the following LRG files to test full range of program features
         test_files = {'COL1A1':'./Test_Files/LRG_1.xml', #Reverse strand, 1 transcript, No differences between LRG/main assembly.
                       'BRCA1':'./Test_Files/LRG_292.xml', #Reverse strand. 1 transcript, numerous mismatch and indels between LRG/main assembly
-                      'NF1':'./Test_Files/LRG_214.xml'#Forward strand, 2 transcripts, No differences between LRG/main assembly     
+                      'NF1':'./Test_Files/LRG_214.xml',#Forward strand, 2 transcripts, No differences between LRG/main assembly
+                      'IndelTest':'./Test_Files/LRG_IndelTest.xml'#Modified to include exon start, exon stop and whole exon deletions in main assembly (compared to LRG)
                       }
-        for gene, filepath in test_files.iteritems():            
-            tree = etree.parse(filepath)    
+        for gene, filepath in test_files.iteritems():
+            tree = etree.parse(filepath)
             mainAssemSeq, convertPosDict = LRGparser.getGenomicSeq(tree)
             geneData = LRGparser.getGeneLevData(tree)
             exonList = LRGparser.getExons(tree, geneData, mainAssemSeq, convertPosDict)
@@ -84,4 +85,5 @@ class TestStringMethods(unittest.TestCase):
             self.assertEqual(exonList, refExonList, "getExons() output doesn't match reference for gene: " + gene)
 
 if __name__ == '__main__':
+    print "\nNOTE: IGNORE ANY ERROR MESSAGES ABOVE THE FIRST DOTTED LINE\n"
     unittest.main()
