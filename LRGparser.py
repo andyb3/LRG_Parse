@@ -18,13 +18,19 @@ def checkGeneDict(usergene):
 
     '''Opens a pickle dictionary containing all of the current (Nov 2016) LRG codes and their corresponding genes
     and returns the correct LRG code for the user specified gene'''
-
-    with open('genedict.pickle', 'rb') as handle:
-        genedict = pickle.load(handle)
-
-    for LRG, genename in genedict.iteritems():
-        if usergene == genename:
-            return LRG
+    # genedictPickle file can become corrupted when doing git clone on Windows, so read directly from GitHub
+    # Also allows the LRG/gene list to be updated with new releases without user having to download new content
+    try:
+        #Load gene dictionary pickle
+        genedictPickle = urllib2.urlopen('https://raw.githubusercontent.com/andyb3/LRG_Parse/master/genedict.pickle')
+        genedict = pickle.load(genedictPickle)
+    except:
+        print("Unable to retrieve genedict.pickle file from web. Please check internet connection.")
+        return # Return a Null value
+    else:
+        for LRG, genename in genedict.iteritems():
+            if usergene == genename:
+                return LRG
     # If no LRG file is found matching the gene symbol provided, print message for user
     print("No LRG file found that matches the gene symbol specified.")
     return # Return a Null value
@@ -33,15 +39,21 @@ def checkValidLRG(userLRG):
 
     '''Opens a pickle dictionary containing all of the current (Nov 2016) LRG codes and their corresponding genes
     and checks that the specified LRG code exists in the dict, then returns the specified LRG code'''
-
-    with open('genedict.pickle', 'rb') as handle:
-        genedict = pickle.load(handle)
-
-    if userLRG in genedict:
-        return userLRG
-    else:
-        print("Invalid LRG code")
+    # genedictPickle file can become corrupted when doing git clone on Windows, so read directly from GitHub
+    # Also allows the LRG/gene list to be updated with new releases without user having to download new content
+    try:
+        #Load gene dictionary pickle
+        genedictPickle = urllib2.urlopen('https://raw.githubusercontent.com/andyb3/LRG_Parse/master/genedict.pickle')
+        genedict = pickle.load(genedictPickle)
+    except:
+        print("Unable to retrieve genedict.pickle file from web. Please check internet connection.")
         return # Return a Null value
+    else:
+        if userLRG in genedict:
+            return userLRG
+        else:
+            print("Invalid LRG code")
+            return # Return a Null value
 
 def readLRG(lrg):
 
