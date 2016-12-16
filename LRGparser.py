@@ -240,10 +240,14 @@ def writeCSV(headers, exonList, LRG):
 
 if __name__ == '__main__':
     # Check that the user has provided the correct number of arguments
-    assert (len(sys.argv) == 3), "Incorrect number of arguments. Please see README file for usage instructions."
+    if len(sys.argv) != 3:
+        print("Incorrect number of arguments. Please see README file for usage instructions.")
+        exit()
 
     # Check that the user has provided one of the two correct flags
-    assert (sys.argv[1] in ['-g', '-l']), "Unknown flag used. Please see README file for usage instructions."
+    if sys.argv[1] not in ['-g', '-l']:
+        print("Unknown flag used. Please see README file for usage instructions.")
+        exit()
 
     # Depending on whether the user has used the '-g' or '-l' flag...
     if sys.argv[1] == '-g':
